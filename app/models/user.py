@@ -13,10 +13,8 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, default="user")
     reset_token = Column(String, nullable=True)
-    reset_token_expires = Column(
-       TIMESTAMP,
-       nullable=True
-    )
+    reset_token_expires = Column(TIMESTAMP, nullable=True)
 
     # Relationships
     payments = relationship("Payment", back_populates="user")
+    notification_setting = relationship("NotificationSetting", back_populates="user")  # 👈 ye line add karein

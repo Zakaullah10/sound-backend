@@ -10,6 +10,12 @@ from app.routes.packs import router as packs_router
 from app.routes.songs import router as songs_router
 from app.routes.genre import router as genre_router
 from app.routes.genre_category import router as genre_category_router
+from app.routes.notification_settings import router as notification_settings_router
+from app.routes.presets import router as presets_router
+from app.routes.instruments import router as instruments_router
+from app.routes.faqs import router as faqs_router
+
+
 
 
 
@@ -25,6 +31,10 @@ app.include_router(packs_router)
 app.include_router(songs_router)
 app.include_router(genre_router)
 app.include_router(genre_category_router)
+app.include_router(notification_settings_router)
+app.include_router(presets_router)
+app.include_router(instruments_router)
+app.include_router(faqs_router)
 
 
 
