@@ -214,3 +214,4 @@ class Pack(Base):
         secondary=pack_tags,
         back_populates="packs"
     )
+    presets = relationship("PRESETS", back_populates="pack")
