@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.models.packs import Pack
 from app.models.songs import SONGS
 
+from app.models.instruments import INSTRUMENT_TAGS
 from app.schemas.songs import (
     SongCreate,
     SongResponse
@@ -107,3 +108,22 @@ def get_song(
         )
 
     return song
+
+
+
+
+@router.post("/{song_id}/tags/{tag_id}")
+def add_tag_to_song(song_id: int, tag_id: int, db: Session = Depends(get_db)):
+    song = db.query(SONGS).filter(SONGS.id == song_id).first()
+    if not song:
+        raise HTTPException(status_code=404, detail="Song not found")
+
+    tag = db.query(INSTRUMENT_TAGS).filter(INSTRUMENT_TAGS.id == tag_id).first()
+    if not tag:
+        raise HTTPException(status_code=404, detail="Tag not found")
+
+    if tag not in song.tags:
+        song.tags.append(tag)
+        db.commit()
+
+    return {"message": f"Tag '{tag.name}' added to song '{song.title}'"}

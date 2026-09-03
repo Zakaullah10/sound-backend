@@ -73,6 +73,23 @@ def update_preset(preset_id: int, payload: PresetUpdate, db: Session = Depends(g
     db.refresh(preset)
     return preset
 
+@router.put("/{preset_id}/pack/{pack_id}", response_model=PresetResponse)
+def assign_preset_to_pack(preset_id: int, pack_id: int, db: Session = Depends(get_db)):
+    from app.models.packs import Pack
+
+    preset = db.query(PRESETS).filter(PRESETS.id == preset_id).first()
+    if not preset:
+        raise HTTPException(status_code=404, detail="Preset not found")
+
+    pack = db.query(Pack).filter(Pack.id == pack_id).first()
+    if not pack:
+        raise HTTPException(status_code=404, detail="Pack not found")
+
+    preset.pack_id = pack_id
+    db.commit()
+    db.refresh(preset)
+    return preset
+
 @router.delete("/{preset_id}")
 def delete_preset(preset_id: int, db: Session = Depends(get_db)):
     preset = db.query(PRESETS).filter(PRESETS.id == preset_id).first()

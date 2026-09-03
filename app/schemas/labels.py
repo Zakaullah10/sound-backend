@@ -18,6 +18,15 @@ from pydantic import BaseModel
 from typing import List
 
 
+
+class GenreBasicResponse(BaseModel):
+    id: int
+    name: str
+    slug: str
+
+    class Config:
+        from_attributes = True
+
 class PackBasicResponse(BaseModel):
     id: int
     title: str
@@ -35,6 +44,8 @@ class LabelResponse(BaseModel):
     id: int
     name: str
     verified: bool
+    genres: List[GenreBasicResponse] = []
+
 
     class Config:
         from_attributes = True

@@ -31,7 +31,11 @@ class Payment(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(10), default="USD")
 
-    payment_method = Column(String(50))       # e.g. "card", "paypal", "jazzcash"
+    payment_method_id = Column(
+    Integer,
+    ForeignKey("payment_methods.id", ondelete="SET NULL"),
+    nullable=True
+     )
     transaction_id = Column(String(150), unique=True)   # gateway se aane wala id
 
     stripe_checkout_session_id = Column(String(200), unique=True, nullable=True)
@@ -50,4 +54,8 @@ class Payment(Base):
         "PaymentHistory",
         back_populates="payment",
         cascade="all, delete-orphan"
+    )
+    payment_method = relationship(
+    "PaymentMethod",
+    back_populates="payments" 
     )

@@ -21,6 +21,7 @@ class PresetBase(BaseModel):
     file_url: Optional[str] = None
     compatible_daw: Optional[str] = None
     category_id: Optional[int] = None
+    pack_id: Optional[int] = None   # ye zaroor hona chahiye
 
 class PresetCreate(PresetBase):
     pass

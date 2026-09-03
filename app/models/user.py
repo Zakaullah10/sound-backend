@@ -18,3 +18,8 @@ class User(Base):
     # Relationships
     payments = relationship("Payment", back_populates="user")
     notification_setting = relationship("NotificationSetting", back_populates="user")  # 👈 ye line add karein
+    payment_methods = relationship(
+    "PaymentMethod",
+    back_populates="user",
+    cascade="all, delete-orphan"
+)

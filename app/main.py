@@ -14,6 +14,7 @@ from app.routes.notification_settings import router as notification_settings_rou
 from app.routes.presets import router as presets_router
 from app.routes.instruments import router as instruments_router
 from app.routes.faqs import router as faqs_router
+from app.routes.payment_method import router as payment_method_router
 
 
 
@@ -35,6 +36,7 @@ app.include_router(notification_settings_router)
 app.include_router(presets_router)
 app.include_router(instruments_router)
 app.include_router(faqs_router)
+app.include_router(payment_method_router)
 
 
 

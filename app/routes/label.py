@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session,joinedload
 
 from app.core.database import get_db
 from app.models.label import Label
@@ -55,9 +55,18 @@ def create_label(
 def get_labels(
     db: Session = Depends(get_db)
 ):
+    label = (
+        db.query(Label)
+        .options(joinedload(Label.genres))
+        .all()
+    )
 
-    return db.query(Label).all()
-
+    if not label:
+        raise HTTPException(
+            status_code=404,
+            detail="Label not found"
+        )
+    return label
 
 @router.get(
     "/{label_id}",
@@ -70,6 +79,7 @@ def get_label(
 
     label = (
         db.query(Label)
+        .options(joinedload(Label.genres))
         .filter(Label.id == label_id)
         .first()
     )
