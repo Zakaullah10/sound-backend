@@ -15,6 +15,7 @@ from app.routes.presets import router as presets_router
 from app.routes.instruments import router as instruments_router
 from app.routes.faqs import router as faqs_router
 from app.routes.payment_method import router as payment_method_router
+from app.routes.auth import router as auth_router
 
 
 
@@ -25,6 +26,7 @@ Base.metadata.create_all(bind =engine)
 app = FastAPI()
 
 app.include_router(user_router)
+app.include_router(auth_router)
 app.include_router(payment_router)
 app.include_router(plan_router)
 app.include_router(labels_router)

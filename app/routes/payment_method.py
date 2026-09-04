@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.config import settings
-
+from app.dependencies.auth import get_current_user
 from app.models.payment_method import PaymentMethod
 
 from app.schemas.payment_method import (
@@ -33,12 +33,13 @@ router = APIRouter(
 )
 def add_payment_method(
     data: PaymentMethodCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
 ):
 
     # TODO:
     # JWT se current user lena hai
-    user_id = 5
+    user_id = current_user.id
 
     # -----------------------------------------------------
     # Check if payment method already exists
@@ -146,12 +147,13 @@ def add_payment_method(
     response_model=list[PaymentMethodResponse]
 )
 def get_payment_methods(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
 ):
 
     # TODO:
     # JWT se current user lena hai
-    user_id = 5
+    user_id = current_user.id
 
     methods = db.query(PaymentMethod).filter(
         PaymentMethod.user_id == user_id
