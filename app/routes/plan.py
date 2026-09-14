@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 
 from app.core.database import get_db
 from app.models.plan import Plan
 from app.schemas.plan import PlanCreate, PlanUpdate, PlanResponse
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 router = APIRouter(prefix="/plans", tags=["Plans"])
 
@@ -18,9 +19,12 @@ def create_plan(data: PlanCreate, db: Session = Depends(get_db)):
     return plan
 
 
-@router.get("/", response_model=List[PlanResponse])
-def get_plans(db: Session = Depends(get_db)):
-    return db.query(Plan).all()
+@router.get("/", response_model=PaginatedResponse[PlanResponse])
+def get_plans(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
+    return paginate(db.query(Plan), **pagination)
 
 
 @router.get("/{plan_id}", response_model=PlanResponse)

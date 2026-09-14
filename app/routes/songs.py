@@ -10,6 +10,8 @@ from app.schemas.songs import (
     SongCreate,
     SongResponse
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 
 router = APIRouter(
@@ -60,11 +62,12 @@ def create_song(
 
 @router.get(
     "/packs/{pack_id}",
-    response_model=list[SongResponse]
+    response_model=PaginatedResponse[SongResponse]
 )
 def get_pack_songs(
     pack_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
 
     pack = (
@@ -79,11 +82,8 @@ def get_pack_songs(
             detail="Pack not found"
         )
 
-    return (
-        db.query(SONGS)
-        .filter(SONGS.pack_id == pack_id)
-        .all()
-    )
+    query = db.query(SONGS).filter(SONGS.pack_id == pack_id)
+    return paginate(query, **pagination)
 
 
 @router.get(

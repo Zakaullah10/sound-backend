@@ -10,6 +10,8 @@ from app.schemas.genre import (
     GenreUpdate,
     GenreResponse,
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 
 router = APIRouter(
@@ -77,17 +79,14 @@ def create_genre(
 
 @router.get(
     "/",
-    response_model=list[GenreResponse]
+    response_model=PaginatedResponse[GenreResponse]
 )
 def get_genres(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
-
-    genres = db.query(GENRE).order_by(
-        GENRE.display_order.asc()
-    ).all()
-
-    return genres
+    query = db.query(GENRE).order_by(GENRE.display_order.asc())
+    return paginate(query, **pagination)
 
 
 # --------------------------------
@@ -96,19 +95,18 @@ def get_genres(
 
 @router.get(
     "/featured",
-    response_model=list[GenreResponse]
+    response_model=PaginatedResponse[GenreResponse]
 )
 def get_featured_genres(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
-
-    genres = db.query(GENRE).filter(
-        GENRE.is_featured == True
-    ).order_by(
-        GENRE.display_order.asc()
-    ).all()
-
-    return genres
+    query = (
+        db.query(GENRE)
+        .filter(GENRE.is_featured == True)
+        .order_by(GENRE.display_order.asc())
+    )
+    return paginate(query, **pagination)
 
 
 # --------------------------------
@@ -117,11 +115,12 @@ def get_featured_genres(
 
 @router.get(
     "/category/{category_id}",
-    response_model=list[GenreResponse]
+    response_model=PaginatedResponse[GenreResponse]
 )
 def get_genres_by_category(
     category_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
 
     category = db.query(GENRE_CATEGORIES).filter(
@@ -134,13 +133,12 @@ def get_genres_by_category(
             detail="Genre category not found"
         )
 
-    genres = db.query(GENRE).filter(
-        GENRE.category_id == category_id
-    ).order_by(
-        GENRE.display_order.asc()
-    ).all()
-
-    return genres
+    query = (
+        db.query(GENRE)
+        .filter(GENRE.category_id == category_id)
+        .order_by(GENRE.display_order.asc())
+    )
+    return paginate(query, **pagination)
 
 
 # --------------------------------

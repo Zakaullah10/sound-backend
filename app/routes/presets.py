@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from app.core.database import get_db
 from app.models.preset_categories import PRESETS, PRESET_CATEGORIES
 from app.schemas.presets import (
     PresetCreate, PresetUpdate, PresetResponse,
     PresetCategoryCreate, PresetCategoryResponse
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 router = APIRouter(prefix="/presets", tags=["Presets"])
 
@@ -19,9 +21,13 @@ def create_category(payload: PresetCategoryCreate, db: Session = Depends(get_db)
     db.refresh(category)
     return category
 
-@router.get("/categories", response_model=List[PresetCategoryResponse])
-def list_categories(db: Session = Depends(get_db)):
-    return db.query(PRESET_CATEGORIES).order_by(PRESET_CATEGORIES.display_order).all()
+@router.get("/categories", response_model=PaginatedResponse[PresetCategoryResponse])
+def list_categories(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
+    query = db.query(PRESET_CATEGORIES).order_by(PRESET_CATEGORIES.display_order)
+    return paginate(query, **pagination)
 
 @router.get("/categories/{category_id}", response_model=PresetCategoryResponse)
 def get_category(category_id: int, db: Session = Depends(get_db)):
@@ -48,12 +54,16 @@ def create_preset(payload: PresetCreate, db: Session = Depends(get_db)):
     db.refresh(preset)
     return preset
 
-@router.get("/", response_model=List[PresetResponse])
-def list_presets(category_id: Optional[int] = None, db: Session = Depends(get_db)):
+@router.get("/", response_model=PaginatedResponse[PresetResponse])
+def list_presets(
+    category_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
     query = db.query(PRESETS)
     if category_id:
         query = query.filter(PRESETS.category_id == category_id)
-    return query.all()
+    return paginate(query, **pagination)
 
 @router.get("/{preset_id}", response_model=PresetResponse)
 def get_preset(preset_id: int, db: Session = Depends(get_db)):

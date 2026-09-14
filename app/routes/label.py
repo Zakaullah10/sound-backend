@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session,joinedload
+from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
 from app.models.label import Label
+from app.models.packs import Pack
 from app.schemas.labels import (
     LabelCreate,
     LabelResponse
 )
+from app.schemas.packs import PackResponse
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 
 router = APIRouter(
@@ -50,23 +54,14 @@ def create_label(
 
 @router.get(
     "/",
-    response_model=list[LabelResponse]
+    response_model=PaginatedResponse[LabelResponse]
 )
 def get_labels(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
-    label = (
-        db.query(Label)
-        .options(joinedload(Label.genres))
-        .all()
-    )
-
-    if not label:
-        raise HTTPException(
-            status_code=404,
-            detail="Label not found"
-        )
-    return label
+    query = db.query(Label).options(selectinload(Label.genres))
+    return paginate(query, **pagination)
 
 @router.get(
     "/{label_id}",
@@ -79,7 +74,7 @@ def get_label(
 
     label = (
         db.query(Label)
-        .options(joinedload(Label.genres))
+        .options(selectinload(Label.genres))
         .filter(Label.id == label_id)
         .first()
     )
@@ -124,10 +119,14 @@ def delete_label(
 
 
 
-@router.get("/{label_id}/packs")
+@router.get(
+    "/{label_id}/packs",
+    response_model=PaginatedResponse[PackResponse],
+)
 def get_packs_by_label(
     label_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
     label = db.query(Label).filter(Label.id == label_id).first()
 
@@ -137,4 +136,9 @@ def get_packs_by_label(
             detail="Label not found"
         )
 
-    return label.packs
+    query = (
+        db.query(Pack)
+        .join(Pack.labels)
+        .filter(Label.id == label_id)
+    )
+    return paginate(query, **pagination)

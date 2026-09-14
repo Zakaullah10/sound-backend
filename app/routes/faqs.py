@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 from app.core.database import get_db
 from app.models.faqs import FAQ
 from app.schemas.faqs import FAQCreate, FAQUpdate, FAQResponse
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 router = APIRouter(prefix="/faqs", tags=["FAQs"])
 
@@ -15,9 +16,13 @@ def create_faq(payload: FAQCreate, db: Session = Depends(get_db)):
     db.refresh(faq)
     return faq
 
-@router.get("/", response_model=List[FAQResponse])
-def list_faqs(db: Session = Depends(get_db)):
-    return db.query(FAQ).order_by(FAQ.display_order).all()
+@router.get("/", response_model=PaginatedResponse[FAQResponse])
+def list_faqs(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
+    query = db.query(FAQ).order_by(FAQ.display_order)
+    return paginate(query, **pagination)
 
 @router.get("/{faq_id}", response_model=FAQResponse)
 def get_faq(faq_id: int, db: Session = Depends(get_db)):

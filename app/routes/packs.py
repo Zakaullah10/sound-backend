@@ -10,6 +10,8 @@ from app.schemas.packs import (
     PackResponse,
     PackDetailResponse
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 
 router = APIRouter(
@@ -67,13 +69,13 @@ def create_pack(
 
 @router.get(
     "/",
-    response_model=list[PackResponse]
+    response_model=PaginatedResponse[PackResponse]
 )
 def get_packs(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
-
-    return db.query(Pack).all()
+    return paginate(db.query(Pack), **pagination)
 
 
 @router.get(

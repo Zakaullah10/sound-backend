@@ -12,6 +12,8 @@ from app.schemas.payment_method import (
     PaymentMethodCreate,
     PaymentMethodResponse
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
@@ -144,22 +146,23 @@ def add_payment_method(
 
 @router.get(
     "",
-    response_model=list[PaymentMethodResponse]
+    response_model=PaginatedResponse[PaymentMethodResponse]
 )
 def get_payment_methods(
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user = Depends(get_current_user),
+    pagination: dict = Depends(pagination_params),
 ):
 
     # TODO:
     # JWT se current user lena hai
     user_id = current_user.id
 
-    methods = db.query(PaymentMethod).filter(
+    query = db.query(PaymentMethod).filter(
         PaymentMethod.user_id == user_id
     ).order_by(
         PaymentMethod.is_default.desc(),
         PaymentMethod.created_at.desc()
-    ).all()
+    )
 
-    return methods
+    return paginate(query, **pagination)

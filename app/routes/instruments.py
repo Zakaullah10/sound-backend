@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 from app.core.database import get_db
 from app.models.instruments import INSTRUMENT_TAGS, INSTRUMENT_CATEGORIES
 from app.schemas.instruments import (
     InstrumentTagCreate, InstrumentTagUpdate, InstrumentTagResponse,
     InstrumentCategoryCreate, InstrumentCategoryResponse
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 router = APIRouter(prefix="/instruments", tags=["Instruments"])
 
@@ -19,9 +21,13 @@ def create_category(payload: InstrumentCategoryCreate, db: Session = Depends(get
     db.refresh(category)
     return category
 
-@router.get("/categories", response_model=List[InstrumentCategoryResponse])
-def list_categories(db: Session = Depends(get_db)):
-    return db.query(INSTRUMENT_CATEGORIES).order_by(INSTRUMENT_CATEGORIES.display_order).all()
+@router.get("/categories", response_model=PaginatedResponse[InstrumentCategoryResponse])
+def list_categories(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
+    query = db.query(INSTRUMENT_CATEGORIES).order_by(INSTRUMENT_CATEGORIES.display_order)
+    return paginate(query, **pagination)
 
 @router.get("/categories/{category_id}", response_model=InstrumentCategoryResponse)
 def get_category(category_id: int, db: Session = Depends(get_db)):
@@ -48,12 +54,16 @@ def create_instrument(payload: InstrumentTagCreate, db: Session = Depends(get_db
     db.refresh(instrument)
     return instrument
 
-@router.get("/", response_model=List[InstrumentTagResponse])
-def list_instruments(category_id: Optional[int] = None, db: Session = Depends(get_db)):
+@router.get("/", response_model=PaginatedResponse[InstrumentTagResponse])
+def list_instruments(
+    category_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
     query = db.query(INSTRUMENT_TAGS)
     if category_id:
         query = query.filter(INSTRUMENT_TAGS.category_id == category_id)
-    return query.all()
+    return paginate(query, **pagination)
 
 @router.get("/{instrument_id}", response_model=InstrumentTagResponse)
 def get_instrument(instrument_id: int, db: Session = Depends(get_db)):

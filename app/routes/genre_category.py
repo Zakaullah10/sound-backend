@@ -10,6 +10,8 @@ from app.schemas.genre_category import (
     GenreCategoryUpdate,
     GenreCategoryResponse,
 )
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 
 
 router = APIRouter(
@@ -62,19 +64,16 @@ def create_category(
 
 @router.get(
     "/",
-    response_model=list[GenreCategoryResponse]
+    response_model=PaginatedResponse[GenreCategoryResponse]
 )
 def get_categories(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
-
-    categories = db.query(
-        GENRE_CATEGORIES
-    ).order_by(
+    query = db.query(GENRE_CATEGORIES).order_by(
         GENRE_CATEGORIES.display_order.asc()
-    ).all()
-
-    return categories
+    )
+    return paginate(query, **pagination)
 
 
 # ==========================================

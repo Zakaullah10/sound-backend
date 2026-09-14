@@ -4,6 +4,8 @@ from app.core.security import hash_password,verify_password,create_access_token,
 from app.core.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate,UserRespose,UserLogin
+from app.schemas.pagination import PaginatedResponse
+from app.utils.pagination import paginate, pagination_params
 from app.dependencies.auth import get_current_user,get_current_admin
 from jose import jwt , JWTError
 import secrets
@@ -44,10 +46,12 @@ def create_user(
 
        return new_user
 
-@router.get("/users", response_model=list[UserRespose])
-def get_users(db:Session = Depends(get_db)):
-       users = db.query(User).all()
-       return users
+@router.get("/users", response_model=PaginatedResponse[UserRespose])
+def get_users(
+       db: Session = Depends(get_db),
+       pagination: dict = Depends(pagination_params),
+):
+       return paginate(db.query(User), **pagination)
 
 @router.get("/users/{user_id}",response_model=UserRespose)
 def get_user(user_id:int, db:Session=Depends(get_db)):
@@ -112,9 +116,10 @@ def get_profile (
 ):return current_user
 
 
-@router.get("/admin/users", response_model=list[UserRespose])
+@router.get("/admin/users", response_model=PaginatedResponse[UserRespose])
 def get_all_users(
     current_admin: User = Depends(get_current_admin),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
 ):
-    return db.query(User).all()
+    return paginate(db.query(User), **pagination)
