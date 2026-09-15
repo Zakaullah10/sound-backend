@@ -61,6 +61,17 @@ def create_song(
 
 
 @router.get(
+    "/",
+    response_model=PaginatedResponse[SongResponse]
+)
+def get_songs(
+    db: Session = Depends(get_db),
+    pagination: dict = Depends(pagination_params),
+):
+    return paginate(db.query(SONGS), **pagination)
+
+
+@router.get(
     "/packs/{pack_id}",
     response_model=PaginatedResponse[SongResponse]
 )
