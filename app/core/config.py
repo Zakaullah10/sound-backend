@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     # JWT / Auth
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 2
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 3
 
     # Stripe
     STRIPE_SECRET_KEY: str

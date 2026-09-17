@@ -1,11 +1,10 @@
 import bcrypt
-import os 
 
-from datetime import datetime,timedelta,timezone
+from datetime import datetime, timedelta, timezone
 from jose import jwt
-from dotenv import load_dotenv
 
-load_dotenv()
+from app.core.config import settings
+
 
 def hash_password(password: str) -> str:
     password_bytes = password.encode("utf-8")
@@ -27,16 +26,13 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 # JWT settings
-
-SECRET_KEY = os.getenv("JWT_SECRET_KEY")
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(
-    os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
-)
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+SECRET_KEY = settings.JWT_SECRET_KEY
+ALGORITHM = settings.JWT_ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
 
 
-def create_access_token(data:dict):
+def create_access_token(data: dict) -> tuple[str, datetime]:
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(
@@ -44,30 +40,31 @@ def create_access_token(data:dict):
     )
 
     to_encode.update({
-        "exp":expire
+        "exp": expire
     })
 
-    return jwt.encode(
+    token = jwt.encode(
         to_encode,
         SECRET_KEY,
         algorithm=ALGORITHM
     )
+    return token, expire
 
 
-
-def create_refresh_token(data:dict):
+def create_refresh_token(data: dict) -> tuple[str, datetime]:
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(
-             days=REFRESH_TOKEN_EXPIRE_DAYS
+       minutes=REFRESH_TOKEN_EXPIRE_DAYS
     )
     to_encode.update({
-        "exp":expire,
-        "type":"refresh"
+        "exp": expire,
+        "type": "refresh"
     })
 
-    return jwt.encode(
+    token = jwt.encode(
         to_encode,
         SECRET_KEY,
         algorithm=ALGORITHM
     )
+    return token, expire

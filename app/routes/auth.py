@@ -36,12 +36,12 @@ def login(user_data :UserLogin,
                      detail="Invalid email or password"
               )
 
-       access_token = create_access_token({
+       access_token, access_token_expires_at = create_access_token({
               "sub":str(user.id),
               "role":user.role
        })
 
-       refresh_token = create_refresh_token({
+       refresh_token, refresh_token_expires_at = create_refresh_token({
         "sub": str(user.id)
        })
 
@@ -50,7 +50,9 @@ def login(user_data :UserLogin,
               "message":"Login successful",
               "user_id":user.id,
               "access_token": access_token,
+              "access_token_expires_at": access_token_expires_at.isoformat(),
               "refresh_token": refresh_token,
+              "refresh_token_expires_at": refresh_token_expires_at.isoformat(),
               "token_type": "bearer"
        }
 
@@ -78,11 +80,12 @@ def refresh_access_token(refresh_token:str):
                      status_code=401,
                      detail="Invalid refresh token"
               )
-           access_token = create_access_token({
+           access_token, access_token_expires_at = create_access_token({
               "sub":str(user_id)
             })
            return{
               "access_token":access_token,
+              "access_token_expires_at": access_token_expires_at.isoformat(),
               "token_type":"bearer"
             }
        except JWTError:
