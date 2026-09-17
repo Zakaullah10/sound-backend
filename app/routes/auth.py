@@ -35,16 +35,17 @@ def login(user_data :UserLogin,
                      status_code=401,
                      detail="Invalid email or password"
               )
-
        access_token, access_token_expires_at = create_access_token({
               "sub":str(user.id),
-              "role":user.role
+              "role":user.role,
+              "exp":user_data.ACCESS_TOKEN_EXPIRE_MINUTES,
        })
-
+       
        refresh_token, refresh_token_expires_at = create_refresh_token({
-        "sub": str(user.id)
+        "sub": str(user.id),
+        "exp":user_data.REFRESH_TOKEN_EXPIRE_MINUTES,
        })
-
+       
 
        return {
               "message":"Login successful",

@@ -36,7 +36,7 @@ def create_access_token(data: dict) -> tuple[str, datetime]:
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=data.get("exp")
     )
 
     to_encode.update({
@@ -55,7 +55,7 @@ def create_refresh_token(data: dict) -> tuple[str, datetime]:
     to_encode = data.copy()
 
     expire = datetime.now(timezone.utc) + timedelta(
-       minutes=REFRESH_TOKEN_EXPIRE_DAYS
+       minutes=data.get("exp")
     )
     to_encode.update({
         "exp": expire,

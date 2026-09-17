@@ -21,5 +21,15 @@ class UserRespose(BaseModel):
 class UserLogin(BaseModel):
     email:str
     password:str
-    
+    ACCESS_TOKEN_EXPIRE_MINUTES:int
+    REFRESH_TOKEN_EXPIRE_MINUTES:int
+
+    class Config:
+        from_attributes = True
+
+class UserRefreshToken(BaseModel):
+    refresh_token:str
+
+    class Config:
+        from_attributes = True
 
