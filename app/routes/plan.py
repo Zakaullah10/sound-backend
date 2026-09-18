@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.plan import Plan
+from app.models.user import User
 from app.schemas.plan import PlanCreate, PlanUpdate, PlanResponse
 from app.schemas.pagination import PaginatedResponse
 from app.utils.pagination import paginate, pagination_params
@@ -23,12 +25,17 @@ def create_plan(data: PlanCreate, db: Session = Depends(get_db)):
 def get_plans(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     return paginate(db.query(Plan), **pagination)
 
 
 @router.get("/{plan_id}", response_model=PlanResponse)
-def get_plan(plan_id: int, db: Session = Depends(get_db)):
+def get_plan(
+    plan_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     plan = db.query(Plan).filter(Plan.id == plan_id).first()
     if not plan:
         raise HTTPException(status_code=404, detail="Plan not found")

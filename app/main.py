@@ -1,7 +1,10 @@
-from fastapi import  FastAPI 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.core.database import Base, engine
 from app.models.user import User
 from app.models import *
+from app.middleware.refreshed_tokens import RefreshedTokenMiddleware
 from app.routes.users import router as user_router
 from app.routes.payment import router as payment_router
 from app.routes.plan import router as plan_router
@@ -16,22 +19,27 @@ from app.routes.instruments import router as instruments_router
 from app.routes.faqs import router as faqs_router
 from app.routes.payment_method import router as payment_method_router
 from app.routes.auth import router as auth_router
-from fastapi.middleware.cors import CORSMiddleware
 
 
-
-
-
-Base.metadata.create_all(bind =engine)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Auth middleware first so it wraps responses after CORS
+app.add_middleware(RefreshedTokenMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=[
+        "X-Access-Token",
+        "X-Access-Token-Expires-At",
+        "X-Refresh-Token",
+        "X-Refresh-Token-Expires-At",
+        "X-Token-Refreshed",
+    ],
 )
 
 app.include_router(user_router)
@@ -48,8 +56,6 @@ app.include_router(presets_router)
 app.include_router(instruments_router)
 app.include_router(faqs_router)
 app.include_router(payment_method_router)
-
-
 
 
 @app.get("/")

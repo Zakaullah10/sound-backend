@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.label import Label
 from app.models.packs import Pack
+from app.models.user import User
 from app.schemas.labels import (
     LabelCreate,
     LabelResponse
@@ -59,6 +61,7 @@ def create_label(
 def get_labels(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(Label).options(selectinload(Label.genres))
     return paginate(query, **pagination)
@@ -69,7 +72,8 @@ def get_labels(
 )
 def get_label(
     label_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     label = (
@@ -127,6 +131,7 @@ def get_packs_by_label(
     label_id: int,
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     label = db.query(Label).filter(Label.id == label_id).first()
 

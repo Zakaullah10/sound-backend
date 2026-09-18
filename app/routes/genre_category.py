@@ -3,7 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.genre_categories import GENRE_CATEGORIES
+from app.models.user import User
 
 from app.schemas.genre_category import (
     GenreCategoryCreate,
@@ -69,6 +71,7 @@ def create_category(
 def get_categories(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(GENRE_CATEGORIES).order_by(
         GENRE_CATEGORIES.display_order.asc()
@@ -86,7 +89,8 @@ def get_categories(
 )
 def get_category(
     category_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     category = db.query(

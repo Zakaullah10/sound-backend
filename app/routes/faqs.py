@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.faqs import FAQ
+from app.models.user import User
 from app.schemas.faqs import FAQCreate, FAQUpdate, FAQResponse
 from app.schemas.pagination import PaginatedResponse
 from app.utils.pagination import paginate, pagination_params
@@ -20,12 +22,17 @@ def create_faq(payload: FAQCreate, db: Session = Depends(get_db)):
 def list_faqs(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(FAQ).order_by(FAQ.display_order)
     return paginate(query, **pagination)
 
 @router.get("/{faq_id}", response_model=FAQResponse)
-def get_faq(faq_id: int, db: Session = Depends(get_db)):
+def get_faq(
+    faq_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     faq = db.query(FAQ).filter(FAQ.id == faq_id).first()
     if not faq:
         raise HTTPException(status_code=404, detail="FAQ not found")

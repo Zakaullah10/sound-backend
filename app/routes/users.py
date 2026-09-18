@@ -50,11 +50,16 @@ def create_user(
 def get_users(
        db: Session = Depends(get_db),
        pagination: dict = Depends(pagination_params),
+       _current_user: User = Depends(get_current_user),
 ):
        return paginate(db.query(User), **pagination)
 
 @router.get("/users/{user_id}",response_model=UserRespose)
-def get_user(user_id:int, db:Session=Depends(get_db)):
+def get_user(
+       user_id:int,
+       db:Session=Depends(get_db),
+       _current_user: User = Depends(get_current_user),
+):
 
        user=db.query(User).filter(User.id == user_id).first()
 

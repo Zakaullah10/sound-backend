@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.instruments import INSTRUMENT_TAGS, INSTRUMENT_CATEGORIES
+from app.models.user import User
 from app.schemas.instruments import (
     InstrumentTagCreate, InstrumentTagUpdate, InstrumentTagResponse,
     InstrumentCategoryCreate, InstrumentCategoryResponse
@@ -25,12 +27,17 @@ def create_category(payload: InstrumentCategoryCreate, db: Session = Depends(get
 def list_categories(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(INSTRUMENT_CATEGORIES).order_by(INSTRUMENT_CATEGORIES.display_order)
     return paginate(query, **pagination)
 
 @router.get("/categories/{category_id}", response_model=InstrumentCategoryResponse)
-def get_category(category_id: int, db: Session = Depends(get_db)):
+def get_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     category = db.query(INSTRUMENT_CATEGORIES).filter(INSTRUMENT_CATEGORIES.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -59,6 +66,7 @@ def list_instruments(
     category_id: Optional[int] = None,
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(INSTRUMENT_TAGS)
     if category_id:
@@ -66,7 +74,11 @@ def list_instruments(
     return paginate(query, **pagination)
 
 @router.get("/{instrument_id}", response_model=InstrumentTagResponse)
-def get_instrument(instrument_id: int, db: Session = Depends(get_db)):
+def get_instrument(
+    instrument_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     instrument = db.query(INSTRUMENT_TAGS).filter(INSTRUMENT_TAGS.id == instrument_id).first()
     if not instrument:
         raise HTTPException(status_code=404, detail="Instrument not found")

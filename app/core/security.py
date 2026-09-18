@@ -30,41 +30,53 @@ SECRET_KEY = settings.JWT_SECRET_KEY
 ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS
+DEFAULT_REFRESH_EXPIRE_MINUTES = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60
 
 
-def create_access_token(data: dict) -> tuple[str, datetime]:
-    to_encode = data.copy()
+def create_access_token(
+    data: dict,
+    expire_minutes: int | None = None,
+) -> tuple[str, datetime]:
+    to_encode = {
+        key: value
+        for key, value in data.items()
+        if key not in {"exp", "type", "access_expire_minutes", "refresh_expire_minutes"}
+    }
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=data.get("exp")
+    minutes = (
+        expire_minutes
+        if expire_minutes is not None
+        else ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
-    to_encode.update({
-        "exp": expire
-    })
+    expire = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    to_encode["exp"] = expire
 
-    token = jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
+    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return token, expire
 
 
-def create_refresh_token(data: dict) -> tuple[str, datetime]:
-    to_encode = data.copy()
+def create_refresh_token(
+    data: dict,
+    expire_minutes: int | None = None,
+) -> tuple[str, datetime]:
+    to_encode = {
+        key: value
+        for key, value in data.items()
+        if key not in {"exp", "type"}
+    }
 
-    expire = datetime.now(timezone.utc) + timedelta(
-       minutes=data.get("exp")
+    minutes = (
+        expire_minutes
+        if expire_minutes is not None
+        else DEFAULT_REFRESH_EXPIRE_MINUTES
     )
+
+    expire = datetime.now(timezone.utc) + timedelta(minutes=minutes)
     to_encode.update({
         "exp": expire,
-        "type": "refresh"
+        "type": "refresh",
     })
 
-    token = jwt.encode(
-        to_encode,
-        SECRET_KEY,
-        algorithm=ALGORITHM
-    )
+    token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return token, expire

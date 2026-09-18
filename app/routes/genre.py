@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.genre_categories import GENRE
 from app.models.genre_categories import GENRE_CATEGORIES
+from app.models.user import User
 
 from app.schemas.genre import (
     GenreCreate,
@@ -84,6 +86,7 @@ def create_genre(
 def get_genres(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(GENRE).order_by(GENRE.display_order.asc())
     return paginate(query, **pagination)
@@ -100,6 +103,7 @@ def get_genres(
 def get_featured_genres(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = (
         db.query(GENRE)
@@ -121,6 +125,7 @@ def get_genres_by_category(
     category_id: int,
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
 
     category = db.query(GENRE_CATEGORIES).filter(
@@ -151,7 +156,8 @@ def get_genres_by_category(
 )
 def get_genre(
     genre_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     genre = db.query(GENRE).filter(

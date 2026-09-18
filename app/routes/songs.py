@@ -2,8 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.packs import Pack
 from app.models.songs import SONGS
+from app.models.user import User
 
 from app.models.instruments import INSTRUMENT_TAGS
 from app.schemas.songs import (
@@ -67,6 +69,7 @@ def create_song(
 def get_songs(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     return paginate(db.query(SONGS), **pagination)
 
@@ -79,6 +82,7 @@ def get_pack_songs(
     pack_id: int,
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
 
     pack = (
@@ -103,7 +107,8 @@ def get_pack_songs(
 )
 def get_song(
     song_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     song = (

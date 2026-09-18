@@ -35,17 +35,19 @@ def login(user_data :UserLogin,
                      status_code=401,
                      detail="Invalid email or password"
               )
-       access_token, access_token_expires_at = create_access_token({
-              "sub":str(user.id),
-              "role":user.role,
-              "exp":user_data.ACCESS_TOKEN_EXPIRE_MINUTES,
-       })
-       
-       refresh_token, refresh_token_expires_at = create_refresh_token({
-        "sub": str(user.id),
-        "exp":user_data.REFRESH_TOKEN_EXPIRE_MINUTES,
-       })
-       
+       access_token, access_token_expires_at = create_access_token(
+              {"sub": str(user.id), "role": user.role},
+              expire_minutes=user_data.ACCESS_TOKEN_EXPIRE_MINUTES,
+       )
+
+       refresh_token, refresh_token_expires_at = create_refresh_token(
+              {
+                     "sub": str(user.id),
+                     "access_expire_minutes": user_data.ACCESS_TOKEN_EXPIRE_MINUTES,
+                     "refresh_expire_minutes": user_data.REFRESH_TOKEN_EXPIRE_MINUTES,
+              },
+              expire_minutes=user_data.REFRESH_TOKEN_EXPIRE_MINUTES,
+       )
 
        return {
               "message":"Login successful",
@@ -81,14 +83,28 @@ def refresh_access_token(refresh_token:str):
                      status_code=401,
                      detail="Invalid refresh token"
               )
-           access_token, access_token_expires_at = create_access_token({
-              "sub":str(user_id)
-            })
-           return{
-              "access_token":access_token,
+           access_expire_minutes = payload.get("access_expire_minutes")
+           refresh_expire_minutes = payload.get("refresh_expire_minutes")
+
+           access_token, access_token_expires_at = create_access_token(
+              {"sub": str(user_id)},
+              expire_minutes=access_expire_minutes,
+           )
+           new_refresh_token, refresh_token_expires_at = create_refresh_token(
+              {
+                     "sub": str(user_id),
+                     "access_expire_minutes": access_expire_minutes,
+                     "refresh_expire_minutes": refresh_expire_minutes,
+              },
+              expire_minutes=refresh_expire_minutes,
+           )
+           return {
+              "access_token": access_token,
               "access_token_expires_at": access_token_expires_at.isoformat(),
-              "token_type":"bearer"
-            }
+              "refresh_token": new_refresh_token,
+              "refresh_token_expires_at": refresh_token_expires_at.isoformat(),
+              "token_type": "bearer",
+           }
        except JWTError:
              raise HTTPException(
                    status_code=401,

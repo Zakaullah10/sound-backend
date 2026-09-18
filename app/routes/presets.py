@@ -2,7 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import Optional
 from app.core.database import get_db
+from app.dependencies.auth import get_current_user
 from app.models.preset_categories import PRESETS, PRESET_CATEGORIES
+from app.models.user import User
 from app.schemas.presets import (
     PresetCreate, PresetUpdate, PresetResponse,
     PresetCategoryCreate, PresetCategoryResponse
@@ -25,12 +27,17 @@ def create_category(payload: PresetCategoryCreate, db: Session = Depends(get_db)
 def list_categories(
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(PRESET_CATEGORIES).order_by(PRESET_CATEGORIES.display_order)
     return paginate(query, **pagination)
 
 @router.get("/categories/{category_id}", response_model=PresetCategoryResponse)
-def get_category(category_id: int, db: Session = Depends(get_db)):
+def get_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     category = db.query(PRESET_CATEGORIES).filter(PRESET_CATEGORIES.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -59,6 +66,7 @@ def list_presets(
     category_id: Optional[int] = None,
     db: Session = Depends(get_db),
     pagination: dict = Depends(pagination_params),
+    _current_user: User = Depends(get_current_user),
 ):
     query = db.query(PRESETS)
     if category_id:
@@ -66,7 +74,11 @@ def list_presets(
     return paginate(query, **pagination)
 
 @router.get("/{preset_id}", response_model=PresetResponse)
-def get_preset(preset_id: int, db: Session = Depends(get_db)):
+def get_preset(
+    preset_id: int,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
     preset = db.query(PRESETS).filter(PRESETS.id == preset_id).first()
     if not preset:
         raise HTTPException(status_code=404, detail="Preset not found")
